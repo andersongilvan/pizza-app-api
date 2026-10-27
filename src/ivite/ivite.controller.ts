@@ -1,4 +1,7 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common'
+import { Public } from '../auth/decorators/public.decorator'
+import { RequiredRoles } from '../auth/decorators/required-rules.decorator'
+import { UserRole } from '../enums/user-role.enum'
 import { AcceptInviteDto, CreateInviteDto } from './dto'
 import { IviteService } from './ivite.service'
 
@@ -8,6 +11,7 @@ export class IviteController {
 
   // POST /invite: cria o convite e envia o email.
   // O código não é devolvido na resposta, ele só chega por email.
+  @RequiredRoles(UserRole.ADMIN)
   @HttpCode(201)
   @Post('create')
   async createInviteUser(@Body() dto: CreateInviteDto) {
@@ -17,6 +21,7 @@ export class IviteController {
   }
 
   // POST /invite/register: o funcionário cria a conta usando o código do convite
+  @Public()
   @HttpCode(201)
   @Post('register')
   register(@Body() dto: AcceptInviteDto) {
