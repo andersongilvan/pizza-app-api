@@ -3,11 +3,11 @@ import { Public } from '../auth/decorators/public.decorator'
 import { RequiredRoles } from '../auth/decorators/required-rules.decorator'
 import { UserRole } from '../user/enums/user-role.enum'
 import { AcceptInviteDto, CreateInviteDto } from './dto'
-import { IviteService } from './ivite.service'
+import { InviteService } from './invite.service'
 
 @Controller('invite')
-export class IviteController {
-  constructor(private readonly iviteService: IviteService) {}
+export class InviteController {
+  constructor(private readonly inviteService: InviteService) {}
 
   // POST /invite: cria o convite e envia o email.
   // O código não é devolvido na resposta, ele só chega por email.
@@ -15,7 +15,7 @@ export class IviteController {
   @HttpCode(201)
   @Post('create')
   async createInviteUser(@Body() dto: CreateInviteDto) {
-    await this.iviteService.createInviteUser(dto)
+    await this.inviteService.createInviteUser(dto)
 
     return { message: 'Convite enviado com sucesso' }
   }
@@ -25,6 +25,6 @@ export class IviteController {
   @HttpCode(201)
   @Post('register')
   register(@Body() dto: AcceptInviteDto) {
-    return this.iviteService.acceptInviteUser(dto)
+    return this.inviteService.acceptInviteUser(dto)
   }
 }

@@ -10,14 +10,14 @@ import { Invite } from './entities/invite.entity'
 import { UserRole } from '../user/enums/user-role.enum'
 import { MailService } from '../mail/mail.service'
 import { UserService } from '../user/user.service'
-import { IviteService } from './ivite.service'
+import { InviteService } from './invite.service'
 
-describe('IviteService', () => {
-  let service: IviteService
+describe('InviteService', () => {
+  let service: InviteService
 
   // Simula a transação: executa o callback com um manager falso
   const manager = { findOne: jest.fn(), save: jest.fn() }
-  const iviteRepository = {
+  const inviteRepository = {
     manager: {
       transaction: jest.fn((callback: (m: typeof manager) => unknown) =>
         callback(manager),
@@ -38,23 +38,23 @@ describe('IviteService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        IviteService,
-        { provide: getRepositoryToken(Invite), useValue: iviteRepository },
+        InviteService,
+        { provide: getRepositoryToken(Invite), useValue: inviteRepository },
         { provide: UserService, useValue: userService },
         { provide: MailService, useValue: mailService },
         { provide: ConfigService, useValue: configService },
       ],
     }).compile()
 
-    service = module.get<IviteService>(IviteService)
+    service = module.get<InviteService>(InviteService)
   })
 
   it('saves the invite and sends the email with the invite link', async () => {
     await service.createInviteUser({ email: 'func@pizza.com' })
 
-    const [invite] = iviteRepository.save.mock.calls[0] as [Invite]
+    const [invite] = inviteRepository.save.mock.calls[0] as [Invite]
 
-    expect(iviteRepository.save).toHaveBeenCalled()
+    expect(inviteRepository.save).toHaveBeenCalled()
     expect(mailService.sendStaffInvite).toHaveBeenCalledWith(
       'func@pizza.com',
       `https://pizza.test/register?code=${invite.code}`,
@@ -67,7 +67,7 @@ describe('IviteService', () => {
     await expect(
       service.createInviteUser({ email: 'func@pizza.com' }),
     ).rejects.toBeInstanceOf(ConflictException)
-    expect(iviteRepository.save).not.toHaveBeenCalled()
+    expect(inviteRepository.save).not.toHaveBeenCalled()
   })
 
   it('removes the invite when the email fails to send', async () => {
@@ -76,7 +76,7 @@ describe('IviteService', () => {
     await expect(
       service.createInviteUser({ email: 'func@pizza.com' }),
     ).rejects.toBeInstanceOf(ServiceUnavailableException)
-    expect(iviteRepository.delete).toHaveBeenCalledWith('invite-id')
+    expect(inviteRepository.delete).toHaveBeenCalledWith('invite-id')
   })
 
   describe('acceptInviteUser', () => {

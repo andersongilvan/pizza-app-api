@@ -20,10 +20,10 @@ const INVITE_TTL_HOURS = 48
 const DEFAULT_FRONTEND_URL = 'http://localhost:5173'
 
 @Injectable()
-export class IviteService {
+export class InviteService {
   constructor(
     @InjectRepository(Invite)
-    private readonly iviteRepository: Repository<Invite>,
+    private readonly inviteRepository: Repository<Invite>,
     private readonly userService: UserService,
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
@@ -38,12 +38,12 @@ export class IviteService {
     }
 
     // Salva o convite com o código e a data de expiração
-    const invite = this.iviteRepository.create({
+    const invite = this.inviteRepository.create({
       code: randomUUID(),
       invitedEmail: data.email,
       expiresAt: new Date(Date.now() + INVITE_TTL_HOURS * 60 * 60 * 1000),
     })
-    await this.iviteRepository.save(invite)
+    await this.inviteRepository.save(invite)
 
     try {
       await this.mailService.sendStaffInvite(
@@ -52,7 +52,7 @@ export class IviteService {
       )
     } catch {
       // Se o email não saiu, remove o convite para não ficar um convite que ninguém recebeu
-      await this.iviteRepository.delete(invite.id)
+      await this.inviteRepository.delete(invite.id)
       throw new ServiceUnavailableException(
         'Não foi possível enviar o email de convite',
       )
@@ -62,7 +62,7 @@ export class IviteService {
   // Cria a conta do funcionário a partir do convite e marca o convite como usado
   async acceptInviteUser({ code, name, password }: AcceptInviteDto) {
     // A transação é aberta pelo repositório do convite: ou tudo é salvo, ou nada
-    return this.iviteRepository.manager.transaction(async (manager) => {
+    return this.inviteRepository.manager.transaction(async (manager) => {
       // O lock faz uma segunda requisição com o mesmo código esperar esta terminar
       const invite = await manager.findOne(Invite, {
         where: { code },
