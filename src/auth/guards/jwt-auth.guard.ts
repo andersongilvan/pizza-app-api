@@ -1,4 +1,8 @@
-import { ExecutionContext, Injectable } from '@nestjs/common'
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { AuthGuard } from '@nestjs/passport'
 import { Observable } from 'rxjs'
@@ -23,5 +27,28 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     return super.canActivate(context)
+  }
+
+  // Chamado depois que a estratégia JWT roda. Quando o token é recusado, o motivo
+  // chega em `info` (e não em `err`), então é aqui que ele é traduzido
+  handleRequest<TUser = any>(err: unknown, user: TUser, info?: Error): TUser {
+    if (info?.name === 'TokenExpiredError') {
+      throw new UnauthorizedException('Token expirado')
+    }
+    if (info?.name === 'JsonWebTokenError') {
+      throw new UnauthorizedException('Token inválido')
+    }
+    if (info?.message === 'No auth token') {
+      throw new UnauthorizedException('Token não informado')
+    }
+    // Falha interna da estratégia (ex.: usuário não encontrado no validate)
+    if (err instanceof Error) {
+      throw err
+    }
+    if (!user) {
+      throw new UnauthorizedException('Não autorizado')
+    }
+
+    return user
   }
 }
