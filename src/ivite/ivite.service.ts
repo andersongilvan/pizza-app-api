@@ -39,7 +39,7 @@ export class IviteService {
 
     // Salva o convite com o código e a data de expiração
     const invite = this.iviteRepository.create({
-      code: this.generateCode(),
+      code: randomUUID(),
       invitedEmail: data.email,
       expiresAt: new Date(Date.now() + INVITE_TTL_HOURS * 60 * 60 * 1000),
     })
@@ -95,9 +95,5 @@ export class IviteService {
       this.configService.get<string>('FRONTEND_URL') ?? DEFAULT_FRONTEND_URL
 
     return `${frontendUrl}/register?code=${code}`
-  }
-
-  private generateCode() {
-    return randomUUID()
   }
 }
