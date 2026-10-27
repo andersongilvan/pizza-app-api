@@ -1,16 +1,15 @@
 import { UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
-import { getRepositoryToken } from '@nestjs/typeorm'
 import { hashSync } from 'bcryptjs'
-import { User } from '../entities/user.entity'
 import { UserRole } from '../enums/user-role.enum'
+import { UserService } from '../user/user.service'
 import { AuthService } from './auth.service'
 
 describe('AuthService', () => {
   let service: AuthService
 
-  const userRepository = { findOne: jest.fn() }
+  const userService = { findByEmail: jest.fn() }
   const jwtService = { signAsync: jest.fn() }
 
   const user = {
@@ -27,7 +26,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: getRepositoryToken(User), useValue: userRepository },
+        { provide: UserService, useValue: userService },
         { provide: JwtService, useValue: jwtService },
       ],
     }).compile()
@@ -36,7 +35,7 @@ describe('AuthService', () => {
   })
 
   it('returns an access token for valid credentials', async () => {
-    userRepository.findOne.mockResolvedValue(user)
+    userService.findByEmail.mockResolvedValue(user)
 
     const result = await service.login({
       email: 'func@pizza.com',
@@ -55,7 +54,7 @@ describe('AuthService', () => {
   })
 
   it('rejects an unknown email', async () => {
-    userRepository.findOne.mockResolvedValue(null)
+    userService.findByEmail.mockResolvedValue(null)
 
     await expect(
       service.login({ email: 'x@pizza.com', password: 'secret123' }),
@@ -63,7 +62,7 @@ describe('AuthService', () => {
   })
 
   it('rejects a wrong password', async () => {
-    userRepository.findOne.mockResolvedValue(user)
+    userService.findByEmail.mockResolvedValue(user)
 
     await expect(
       service.login({ email: 'func@pizza.com', password: 'wrong-pass' }),

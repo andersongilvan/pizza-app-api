@@ -1,23 +1,20 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { InjectRepository } from '@nestjs/typeorm'
 import { compareSync } from 'bcryptjs'
-import { Repository } from 'typeorm'
-import { User } from '../entities/user.entity'
+import { UserService } from '../user/user.service'
 import { JwtPayload } from './auth.types'
 import { LoginDto } from './dto'
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
 
   // Valida email e senha e devolve o token de acesso
   async login({ email, password }: LoginDto) {
-    const user = await this.userRepository.findOne({ where: { email } })
+    const user = await this.userService.findByEmail(email)
 
     // Mesma resposta para email inexistente e senha errada, para não revelar qual deles falhou
     if (!user || !compareSync(password, user.password)) {

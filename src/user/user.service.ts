@@ -51,6 +51,10 @@ export class UserService {
     return this.userRepository.findOne({ where: { email } })
   }
 
+  async findById(id: string) {
+    return this.userRepository.findOne({ where: { id } })
+  }
+
   async promoteAdm(id: string) {
     const user = await this.userRepository.findOne({ where: { id } })
     if (!user) {
