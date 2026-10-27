@@ -79,11 +79,7 @@ export class PasswordResetService {
         throw new BadRequestException('Token inválido ou expirado')
       }
 
-      await this.userService.updatePassword(
-        resetToken.userId,
-        password,
-        manager,
-      )
+      await this.userService.updatePassword(resetToken.userId, password)
 
       resetToken.usedAt = new Date()
       await manager.save(resetToken)

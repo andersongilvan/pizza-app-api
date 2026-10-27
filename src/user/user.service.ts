@@ -5,10 +5,10 @@ import {
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { hashSync } from 'bcryptjs'
-import { EntityManager, Repository } from 'typeorm'
+import { Repository } from 'typeorm'
+import { CreateUserDto } from './dto'
 import { User } from './entities/user.entity'
 import { UserRole } from './enums/user-role.enum'
-import { CreateUserDto } from './dto'
 
 @Injectable()
 export class UserService {
@@ -55,13 +55,9 @@ export class UserService {
     return this.userRepository.findOne({ where: { id } })
   }
 
-  // Troca a senha do usuário. Com `manager`, roda dentro da transação de quem chamou
-  async updatePassword(id: string, password: string, manager?: EntityManager) {
-    const userRepository = manager
-      ? manager.getRepository(User)
-      : this.userRepository
-
-    const result = await userRepository.update(id, {
+  // Troca a senha do usuário
+  async updatePassword(id: string, password: string) {
+    const result = await this.userRepository.update(id, {
       password: hashSync(password, 10),
     })
     if (!result.affected) {

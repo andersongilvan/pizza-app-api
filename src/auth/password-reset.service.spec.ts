@@ -112,7 +112,6 @@ describe('PasswordResetService', () => {
       expect(userService.updatePassword).toHaveBeenCalledWith(
         'user-id',
         'new-secret',
-        manager,
       )
       expect(token.usedAt).toBeInstanceOf(Date)
       expect(manager.save).toHaveBeenCalledWith(token)
