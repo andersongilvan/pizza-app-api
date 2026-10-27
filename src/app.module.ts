@@ -2,9 +2,12 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
+import { UserModule } from './user/user.module';
+import { MailModule } from './mail/mail.module';
+import { IviteModule } from './ivite/ivite.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, UserModule, MailModule, IviteModule],
   controllers: [AppController],
   providers: [AppService],
 })
