@@ -8,8 +8,11 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 
-export const staffInviteTemplate = (username: string, inviteLink: string) => {
-  const name = escapeHtml(username)
+export const staffInviteTemplate = (
+  username: string | undefined,
+  inviteLink: string,
+) => {
+  const greeting = username ? `Olá, ${escapeHtml(username)}!` : 'Olá!'
   const link = escapeHtml(inviteLink)
 
   return `<!doctype html>
@@ -73,7 +76,7 @@ export const staffInviteTemplate = (username: string, inviteLink: string) => {
                   Crie sua conta de funcionário
                 </h1>
 
-                <p style="margin: 0 0 16px">Olá, ${name}!</p>
+                <p style="margin: 0 0 16px">${greeting}</p>
                 <p style="margin: 0 0 24px">
                   Você foi convidado para fazer parte da equipe do ${APP_NAME}. Para concluir o seu
                   cadastro, clique no botão abaixo e defina seus dados de acesso.

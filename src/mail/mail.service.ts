@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as nodemailer from 'nodemailer'
+import { staffInviteTemplate } from './templates/staff-invite'
 
 @Injectable()
 export class MailService {
@@ -27,15 +28,12 @@ export class MailService {
     return this.transporter.sendMail({ from: this.from, ...options })
   }
 
-  async sendStaffInvite(to: string, inviteLink: string) {
+  async sendStaffInvite(to: string, inviteLink: string, username?: string) {
     return this.sendMail({
       to,
       subject: 'Convite para criar sua conta de funcionário',
       text: `Você foi convidado para criar sua conta de funcionário. Acesse o link para concluir o cadastro: ${inviteLink}`,
-      html: `
-        <p>Você foi convidado para criar sua conta de funcionário.</p>
-        <p><a href="${inviteLink}">Clique aqui para concluir o cadastro</a></p>
-      `,
+      html: staffInviteTemplate(username, inviteLink),
     })
   }
 }
