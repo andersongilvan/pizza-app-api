@@ -19,6 +19,9 @@ export class Invite {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 
+  @Column({ name: 'expires_at', type: 'timestamp' })
+  expiresAt: Date
+
   @Column({ name: 'used_at', type: 'timestamp', nullable: true })
   usedAt: Date | null
 }
