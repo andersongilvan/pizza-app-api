@@ -1,19 +1,25 @@
-import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common'
-import { CreateInviteDto } from './dto'
+import { Body, Controller, HttpCode, Post } from '@nestjs/common'
+import { AcceptInviteDto, CreateInviteDto } from './dto'
 import { IviteService } from './ivite.service'
 
 @Controller('invite')
 export class IviteController {
   constructor(private readonly iviteService: IviteService) {}
 
+  // POST /invite: cria o convite e envia o email.
+  // O código não é devolvido na resposta, ele só chega por email.
   @HttpCode(201)
-  @Post()
-  create(@Body() dto: CreateInviteDto) {
-    return this.iviteService.create(dto)
+  @Post('create')
+  async createInviteUser(@Body() dto: CreateInviteDto) {
+    await this.iviteService.createInviteUser(dto)
+
+    return { message: 'Convite enviado com sucesso' }
   }
 
-  @Get(':code')
-  validate(@Param('code') code: string) {
-    return this.iviteService.validate(code)
+  // POST /invite/register: o funcionário cria a conta usando o código do convite
+  @HttpCode(201)
+  @Post('register')
+  register(@Body() dto: AcceptInviteDto) {
+    return this.iviteService.acceptInviteUser(dto)
   }
 }

@@ -28,6 +28,7 @@ export class MailService {
     return this.transporter.sendMail({ from: this.from, ...options })
   }
 
+  // Envia o email de convite para criação de conta de funcionário
   async sendStaffInvite(to: string, inviteLink: string, username?: string) {
     return this.sendMail({
       to,

@@ -6,101 +6,98 @@ import {
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
-import { randomBytes } from 'node:crypto'
-import { EntityManager, IsNull, Repository } from 'typeorm'
+import { randomUUID } from 'node:crypto'
+import { Repository } from 'typeorm'
 import { Invite } from '../entities/invite.entity'
-import { User } from '../entities/user.entity'
+import { UserRole } from '../enums/user-role.enum'
 import { MailService } from '../mail/mail.service'
-import { CreateInviteDto } from './dto'
+import { UserService } from '../user/user.service'
+import { AcceptInviteDto, CreateInviteDto } from './dto'
 
+// Tempo de validade do convite
 const INVITE_TTL_HOURS = 48
+// Endereço do front usado quando FRONTEND_URL não está definido no .env
 const DEFAULT_FRONTEND_URL = 'http://localhost:5173'
 
 @Injectable()
 export class IviteService {
   constructor(
     @InjectRepository(Invite)
-    private readonly inviteRepository: Repository<Invite>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly iviteRepository: Repository<Invite>,
+    private readonly userService: UserService,
     private readonly mailService: MailService,
     private readonly configService: ConfigService,
   ) {}
 
-  async create({ email }: CreateInviteDto) {
-    const userWithEmail = await this.userRepository.findOne({
-      where: { email },
-    })
-    if (userWithEmail) {
+  // Cria o convite, envia o link por email e retorna o código gerado
+  async createInviteUser(data: CreateInviteDto) {
+    // Não convida quem já tem conta
+    const emailExists = await this.userService.findByEmail(data.email)
+    if (emailExists) {
       throw new ConflictException('Email já está em uso')
     }
 
-    // Um novo convite invalida os anteriores ainda não utilizados para o mesmo email
-    await this.inviteRepository.delete({
-      invitedEmail: email,
-      usedAt: IsNull(),
-    })
-
-    const invite = this.inviteRepository.create({
-      code: randomBytes(32).toString('hex'),
-      invitedEmail: email,
+    // Salva o convite com o código e a data de expiração
+    const invite = this.iviteRepository.create({
+      code: this.generateCode(),
+      invitedEmail: data.email,
       expiresAt: new Date(Date.now() + INVITE_TTL_HOURS * 60 * 60 * 1000),
     })
-    await this.inviteRepository.save(invite)
+    await this.iviteRepository.save(invite)
 
     try {
       await this.mailService.sendStaffInvite(
-        email,
+        data.email,
         this.buildInviteLink(invite.code),
       )
     } catch {
-      await this.inviteRepository.delete(invite.id)
+      // Se o email não saiu, remove o convite para não ficar um convite que ninguém recebeu
+      await this.iviteRepository.delete(invite.id)
       throw new ServiceUnavailableException(
         'Não foi possível enviar o email de convite',
       )
     }
-
-    return {
-      id: invite.id,
-      invitedEmail: invite.invitedEmail,
-      expiresAt: invite.expiresAt,
-    }
   }
 
-  async validate(code: string) {
-    const invite = await this.inviteRepository.findOne({ where: { code } })
-    this.assertUsable(invite)
+  // Cria a conta do funcionário a partir do convite e marca o convite como usado
+  async acceptInviteUser({ code, name, password }: AcceptInviteDto) {
+    // A transação é aberta pelo repositório do convite: ou tudo é salvo, ou nada
+    return this.iviteRepository.manager.transaction(async (manager) => {
+      // O lock faz uma segunda requisição com o mesmo código esperar esta terminar
+      const invite = await manager.findOne(Invite, {
+        where: { code },
+        lock: { mode: 'pessimistic_write' },
+      })
 
-    return { invitedEmail: invite.invitedEmail, expiresAt: invite.expiresAt }
-  }
+      // Mesma resposta para convite inexistente, já usado ou expirado
+      if (!invite || invite.usedAt || invite.expiresAt <= new Date()) {
+        throw new NotFoundException('Convite inválido ou expirado')
+      }
 
-  /**
-   * Consome o convite dentro da transação do chamador. O lock impede que dois
-   * cadastros simultâneos usem o mesmo convite.
-   */
-  async consume(code: string, manager: EntityManager) {
-    const invite = await manager.findOne(Invite, {
-      where: { code },
-      lock: { mode: 'pessimistic_write' },
+      // O email vem do convite e o papel é definido aqui, nunca pelo cliente
+      const user = await this.userService.save({
+        name,
+        email: invite.invitedEmail,
+        password,
+        role: UserRole.STAFF,
+      })
+
+      invite.usedAt = new Date()
+      await manager.save(invite)
+
+      return user
     })
-    this.assertUsable(invite)
-
-    invite.usedAt = new Date()
-    await manager.save(invite)
-
-    return invite
   }
 
-  private assertUsable(invite: Invite | null): asserts invite is Invite {
-    if (!invite || invite.usedAt || invite.expiresAt <= new Date()) {
-      throw new NotFoundException('Convite inválido ou expirado')
-    }
-  }
-
+  // Link que o funcionário abre para criar a conta
   private buildInviteLink(code: string) {
     const frontendUrl =
       this.configService.get<string>('FRONTEND_URL') ?? DEFAULT_FRONTEND_URL
 
-    return `${frontendUrl}/register?code=${encodeURIComponent(code)}`
+    return `${frontendUrl}/register?code=${code}`
+  }
+
+  private generateCode() {
+    return randomUUID()
   }
 }

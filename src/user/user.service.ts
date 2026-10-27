@@ -1,35 +1,18 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { hashSync } from 'bcryptjs'
-import { DataSource, EntityManager, Repository } from 'typeorm'
+import { EntityManager, Repository } from 'typeorm'
 import { User } from '../entities/user.entity'
-import { UserRole } from '../enums/user-role.enum'
-import { IviteService } from '../ivite/ivite.service'
-import { CreateUserDto, RegisterWithInviteDto } from './dto'
+import { CreateUserDto } from './dto'
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly iviteService: IviteService,
-    private readonly dataSource: DataSource,
   ) {}
 
-  async registerWithInvite(
-    code: string,
-    { name, password }: RegisterWithInviteDto,
-  ) {
-    return this.dataSource.transaction(async (manager) => {
-      const invite = await this.iviteService.consume(code, manager)
-
-      return this.save(
-        { name, email: invite.invitedEmail, password, role: UserRole.STAFF },
-        manager,
-      )
-    })
-  }
-
+  // Com `manager`, salva dentro da transação de quem chamou
   async save(data: CreateUserDto, manager?: EntityManager) {
     const userRepository = manager
       ? manager.getRepository(User)
@@ -59,5 +42,9 @@ export class UserService {
     const { password, ...userWithoutPassword } = user
     void password
     return userWithoutPassword
+  }
+
+  async findByEmail(email: string) {
+    return this.userRepository.findOne({ where: { email } })
   }
 }
