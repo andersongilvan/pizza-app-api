@@ -1,8 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import type { Request } from 'express'
@@ -26,7 +26,7 @@ export class RulesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest<Request>()
 
     if (!requiredRoles.includes(user?.role as UserRole)) {
-      throw new UnauthorizedException(
+      throw new ForbiddenException(
         'Você não tem permissão para acessar este recurso',
       )
     }
