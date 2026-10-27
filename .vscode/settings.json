@@ -9,5 +9,7 @@
     "source.fixAll.eslint": "always",
     "source.organizeImports": "always",
     "source.removeUnusedImports": "always"
-  }
+  },
+  "editor.cursorSmoothCaretAnimation": "off",
+  "editor.cursorSurroundingLines": 1
 }
