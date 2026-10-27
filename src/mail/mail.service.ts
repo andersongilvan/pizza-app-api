@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as nodemailer from 'nodemailer'
+import { passwordResetTemplate } from './templates/password-reset'
 import { staffInviteTemplate } from './templates/staff-invite'
 
 @Injectable()
@@ -35,6 +36,16 @@ export class MailService {
       subject: 'Convite para criar sua conta de funcionário',
       text: `Você foi convidado para criar sua conta de funcionário. Acesse o link para concluir o cadastro: ${inviteLink}`,
       html: staffInviteTemplate(username, inviteLink),
+    })
+  }
+
+  // Envia o email com o link para redefinir a senha
+  async sendPasswordReset(to: string, resetLink: string) {
+    return this.sendMail({
+      to,
+      subject: 'Redefinição de senha',
+      text: `Recebemos um pedido para redefinir a sua senha. Acesse o link para escolher uma nova senha (válido por 1 hora): ${resetLink}`,
+      html: passwordResetTemplate(resetLink),
     })
   }
 }

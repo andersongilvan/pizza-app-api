@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { hashSync } from 'bcryptjs'
-import { Repository } from 'typeorm'
+import { EntityManager, Repository } from 'typeorm'
 import { User } from './entities/user.entity'
 import { UserRole } from './enums/user-role.enum'
 import { CreateUserDto } from './dto'
@@ -53,6 +53,20 @@ export class UserService {
 
   async findById(id: string) {
     return this.userRepository.findOne({ where: { id } })
+  }
+
+  // Troca a senha do usuário. Com `manager`, roda dentro da transação de quem chamou
+  async updatePassword(id: string, password: string, manager?: EntityManager) {
+    const userRepository = manager
+      ? manager.getRepository(User)
+      : this.userRepository
+
+    const result = await userRepository.update(id, {
+      password: hashSync(password, 10),
+    })
+    if (!result.affected) {
+      throw new NotFoundException('Usuário não encontrado')
+    }
   }
 
   async promoteAdm(id: string) {
