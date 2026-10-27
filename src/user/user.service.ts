@@ -6,8 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { hashSync } from 'bcryptjs'
 import { Repository } from 'typeorm'
-import { User } from '../entities/user.entity'
-import { UserRole } from '../enums/user-role.enum'
+import { User } from './entities/user.entity'
+import { UserRole } from './enums/user-role.enum'
 import { CreateUserDto } from './dto'
 
 @Injectable()

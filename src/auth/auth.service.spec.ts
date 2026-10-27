@@ -2,7 +2,7 @@ import { UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
 import { hashSync } from 'bcryptjs'
-import { UserRole } from '../enums/user-role.enum'
+import { UserRole } from '../user/enums/user-role.enum'
 import { UserService } from '../user/user.service'
 import { AuthService } from './auth.service'
 

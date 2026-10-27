@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Req } from '@nestjs/common'
 import type { Request } from 'express'
 import { RequiredRoles } from '../auth/decorators/required-rules.decorator'
-import { UserRole } from '../enums/user-role.enum'
+import { UserRole } from './enums/user-role.enum'
 import { CreateUserDto } from './dto'
 import { UserService } from './user.service'
 
