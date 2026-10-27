@@ -5,9 +5,10 @@ import { DatabaseModule } from './database/database.module';
 import { UserModule } from './user/user.module';
 import { MailModule } from './mail/mail.module';
 import { IviteModule } from './ivite/ivite.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [DatabaseModule, UserModule, MailModule, IviteModule],
+  imports: [DatabaseModule, UserModule, MailModule, IviteModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
